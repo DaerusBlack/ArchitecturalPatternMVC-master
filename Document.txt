@@ -1,0 +1,129 @@
+
+
+Architecutal patternler, bir projenin sistematik iþleyiþinden(çalýþma mekanizmasýndan, sistem içerisindekji iþ akýþýndan) sorumludur. 
+Projenin tüm çalýþma mantýðý ve sistemsel iþleyiþi ile ilgilenen bir þablondur. Bozulduklarý zaman proje çöker...
+
+Design Patternler ise, kesinlikle bir ptojenin sistematik iþleyiþi ile ilgilenmez. Proje içerisinden çýkardýðýnýz  zaman proje çökmez. Ancak performansý ciddi ölçüde kayebedebilir. Projenin kurulumuna bir katkýlarý yoktur. Ancak mimari patternler ile uyum saðlamalarý gerekir ki asýl verimli bir þekilde performansý arttýrýlabilsin.
+
+_________________________________________________________________________________________________________________________________________________
+
+* YÖNETÝLEBÝLÝRLÝK
+* EKÝP ÇALIÞMASI
+* PERFORMANS
+
+Açýsýndan bütün sorumluluklarý tek tek projelere ayýrdýðýmýz mimarilere Layered(Katmanlý) Architecture Pattern denir
+
+Bunlardan N-Tier Architectural Patternler bütün katmanlarýn baðýmsýz olmasý prensibini uygulayarak ciddi ölçüde esneklik saðlar.
+Tek bir projede hem veritabaný hem tasarým hem de class'larýn tutulamasý bir hata durumunda projenizin esnekliðini kýsýtlayacaktýr. 
+Ancak bütün görevler kendi sorumluluklarýný uygulayan ayrý projelerde tutuluyorsa daha fazla esneklik kazanýp ayný zamanda hataya daha hýzlý ve kolay þekilde müdahele edilebilir ve performans kazanýlabilir ve ayný zamanda ekip üyerleri ayný anda farklý yerlerden çalýþabilirler1!
+
+Katmanlý mimari kullanmak için aklýnýzdaki projeyi görev yapacak ayrý ayrý parçalara ayýrmalýsýný..
+Projenizin bütün halini bölere yönetmeye çalýþtýðýnýzda ve her projeye görevlerini yazdýðýnýzda bir katmanlý mimarý uygulamýþ olursunuz...
+
+Katmanlý Mimari geleneksel olarak 3 katmandan oluþur. (Ancak projemizi daha fazla bölmek istediðimizde bu sayýnýn da bir limiti yoktur..)
+
+Bir katmanlý mimaride olmasý gereken katmanlar :
+
+
+* DAL (Data Access Layer) - Veri Eriþimi Katmaný :
+Projenizin sadece veritabaný eriþimi ile ilgilenecek olan kýsmýdýr. DBFirst yönteminde sadece veritabaný yansýmasý almayý saðlarken,
+CodeFirst'te sorumluluðun ayrýlmasý tek bir katmanla mümkün deðildir. Dolayýsýyla CodeFirst yöntemlerinde yaratacaðýnýz Context sýnýfýnýn ayrý bir yerde tutulmasý grerekir..
+
+DbFirst'te bu katmanýn görevi hem veritabýný sýnýfýnýn hem Entity'leri, hem Enum'lar tutmak olduðu için N-Tier'in getirdiði esneklik DBFirst'te biraz azalýr.
+
+Context sýnýfýnýn içerisinde ayarlamalarý bu katman belirler.. Code First durumunda ise size ait olan sýnýflar, tasarým patternleri uygulayacak sýnýflar, custom tools vs.. burda yer almamalýdýr. Eðer CodeFirst'e ek olarak FluenApi(Akýyý Uygulamalar) ile bir ayarlama yapýlacaksa ayrý bir katman daha açýlmasý kesinlikle tavsiye edilir..
+
+
+* BLL(Businness Logic Layer) - Ýþ Mantýðý Katmaný (Projemizin Beyni) :
+Eðer bir FrameWork'un size sunduðu metotlarý özelleþtirmek(en saðlýklýsýdýr..) isterseniz veye ek olarka kendi metotlarýnýýz açmak isterseniz ve bu metotlar tüm her yerde kullanýoclarak metotlar olacakasa/ortak bir sýnýf yaratmak isterseniz bu tarz yapýlarý bu katmanda toplarsýnýz..
+Ayný zamanda BLL katmaný tasarým patternlerinizi(Design Patterns) tutup onlarýn kullanýlmasýný saðlayan katmandýr. (singleton, GenericReposirory, Builder, Factory, Abstract Factory, Visitor, Facade) patternleri bu katmanda kullanýlýr. Önemli Interface'ler bu katmanda durur...
+
+
+* Presentation (UI - User Interface) - Sunum/Kullanýcý Arayüzü :
+Tasarým arayüzümüzdür.
+Kullanýcý sadece burayý görür!!
+Çalýþabilen tek katmandýr.. (diðer katmanlar DLL olarak algýlanacaktýr.) (API Hariç)
+Burasý sayesinde programýnýz çalýþýr ve kullanýlabilir.
+
+_______________________________________________  Code First Yönteminde N-Tier Architecture    ___________________________________________________
+
+DAL: Veri Tabanýna eriþimi saðlayacaðýmýz alan.
+MODEL: Tablo olarak class'larýnýzý tutacak katmandýr.
+MAP: Tablo olarak class'larýnýzýn ayarlamalarýnýn yapýldýðý katmandýr.
+BLL: Ýþ Mantýðý
+UI/Presetation
+_________________________________________________________________________________________________________________________________________________
+
+Katmanlý mimaride önemli kurallar vardýr ..!
+
+* Eðer bir katman baþka bir katmandan referans alýyorsa o yere referans veremez... Bu durum illa isteniyorsa ortak yapýlarýn kullanýlabilecði ara bir katman oluþturulur.
+
+* Eðer bir katmandan referans almýþsanýz bu, o katmanýn da referanslarýný aldýðýnýz anlamýna gelmez.. Sizin referans alacaðýnýz katmanlarý ayrý ayrý almanýz gerekir.(BLL içerisinde DAL'ýn referansýný barýndýrýyorsa ve DAL'da Entity Framework referansý varsa yaptýðýnýz iþlem sizin BLL katmanýnýza otomatik olarak Entity Frameworkun geleceði anlamýna gelmez) O yüzden bir referans ekleyecekseniz ayrýca eklemeniz gerekir.
+
+* Bir projenin BLL, DAL, MODEL katmanlarý sadece bir tane olabilir!!! Ancak UI katmaný birden fazla olabilir.
+_________________________________________________________________________________________________________________________________________________
+____________________________________________________________    PROJE ADIMLARI      _____________________________________________________________
+_________________________________________________________________________________________________________________________________________________
+
+DAL: Veri Tabanýna eriþimi saðlayacaðýmýz alan.
+MODEL(Entities): Tablo olarak class'larýnýzý tutacak katmandýr.
+MAP: Tablo olarak class'larýnýzýn ayarlamalarýnýn yapýldýðý katmandýr.
+BLL: Ýþ Mantýðý
+UI/Presetation :
+
+UI ile DAL'ý birbirine direkt olarak kesinliklikle baðlamamalýyýz.
+Teknik olarak bir sorun çýkarmaz, yine yapýlabilir ama ileri seviyede bir güvenlik açýðýda yaratmýþ olurus direkt olarak iliþkilendirirsek.
+
+* Ýlk baþta Visual Studio'dan bir Blank Solution açýlýr.
+
+* Öncelikler MODEL, DAL, BLL, UI katmanlarý açýlýr... (UI katmaný haricindekiler Class Library projesi olarak açýlýr.)
+ UI katmaný hangi display'i istiyorsanýz o þekilde açýlýr. Bu projede display MVC Core projesi olarak seçilmiþtir.
+
+****** !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UI KATMANI SET AS STARTUP PROJECT OLARAK AYARLANMAK ZORUNDADIR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+* Solutiona' sað týklanarak Add New Project Denir ve Class Library platformunda bir proje açýlýr MODEL/ENTITIES.
+
+* Ayný iþlem uygulanarak DAL katmaný açýlýr.
+
+* Ayný iþlem uygulanarak MAP katmaný açýlýr.
+
+* Ayný iþlem uygulanarak BLL katmaný açýlýr.
+
+* Core MVC platformunda UI Katmaný açýlýr.
+
+__________________________________________________________________  MODEL/ENTITIES KATMANI  ______________________________________________________________
+
+Bu katmanda veritabanýnda tabloya dönüþecek olaran class'larýmýzý tutuyoruz.
+Classlarýmýzý açmaya baþlýyoruz.
+
+_______________________________________________________________________  MAP KATMANI  ___________________________________________________________________
+
+* Map katmanýna veritabaný ayarlamalarýnýn yapýlabilmesi açýsýndan Entity Framework kütüphanesi indirilir.
+
+* MAP katmaný, MODEL katmanýndaki tablo olacak sýnýflarýmý kullanacaðý için o katmaný referans almak zorundadýr. 
+Dolayýsýyla bu katmana Entities katmanýndan referans vermemiz gerekir (Map projesi altýndan, dependencies'e týklanýr, add project reference seçilir.)
+
+* Bu iþlemlerden sonra Options dosyasý açýlýp Map içerisinde, bunlarý farklý bir yapýya alýyoruz.
+
+* Ýçerisinde BaseMap isimli bir sýnýf oluþturuyoruz. Bu BaseMap() sýnýfýmýz bizim ortak veritabaný ayarlamalarýný yapmamýzý saðlayacak sýnýftýr (her sýnýfda bulunan property'lerin isimlerinin, tiplerinin vs deðiþtirilmesi gibi..). Bu ayarlamalarý hangi sýnýfa göre yapacaðýný bilmesi gerekir. Çünkü her ne kadar hangi property'lerini ayarlayacaðýný bilse de bu property'ler birden fazla sýnýfta bulunmaktadýr. Dolayýsýyla bu ayarý hangi sýnýf için yapabilecðini anlayabilmesi açýsýndan BaseMap sýnýfý Generi tipte yaratýrlý (BaseMap<T>) Generic Tip demek sýnýf tetiklendiðinde hangi tip için iþlem yapacaðýný esnek bir þekilde verebilmek demektir.. Yani BaseMap'ten miras alýndýðýnda BaseMap'in T'si istenen bir tipe dönüþtürülebilir..
+
+ Tabii ki BaseMap aldýðý bu tipi ayarlamalarý yapabilmek için Entity Framework kütüphanesinde ayarlamalarla ilgilenen bir sýnýfa göndermek zorundadýr (bu sýnýf BaseMap'in miras aldýðý IEntityTypeConfiguration interface'idir. )
+ EntityTypeConfiguration da kendsi generic sýnýf olan bir sýnýftýr...
+ Dolasýyla BaseMap generi tipi belirlendiði zaman bu tipi Miras Alýnan öðeler de anlayacaktýr.
+
+ ___________________________________________________________ DAL KATMANI  ___________________________________________________________________
+
+ * DAL(Project)'a sað týklayýp Manage Nuget Packets'tan Entity Framework kütüphanesini buraya da indiriyoruz.(Model/Entities katmaný dýþýnda tüm katmanlara bu kütüphaneyi indiriyoruz.) Model'de bütün classlarý kendimiz yarattýðýmýziçin bu katmanada indirme gereksinimi duymuyoruz.
+
+ * DAL bizim class'larýmýzý Tablo yapacaðý için refefans almasý gerekir.
+ * Bunun için DAL'a ENTITIES'den ve MAP'ten referans veriyoruz.
+
+ * Context klasörümüzü DAL'ýn içerisinde oluþturuyoruz.
+ * Context'in içerisine MyContext class'ýmýzý oluþturuyoruz.
+ * DbContext'i namespace'e ekleyerek sýnýfýmýza miras veriyoruz.
+
+ ___________________________________________________________ BLL KATMANI  ___________________________________________________________________
+
+ * Öncelikle EntityFramework 5.0.17 sürümü indiriyoruz.
+ * MODEL, DAL katmanlarýndan referans alýnýr..
+ * Singleton pattern'ide burada yazacaðýmýz için AppDbContext'in olduðu yerden referans almak zorundadýr.
